@@ -27,7 +27,6 @@ class Searchbar extends Component {
   };
 
   render() {
-    const { onSubmit } = this.props;
     const { searchQuery } = this.state;
     return (
       <header className={s.Searchbar}>
