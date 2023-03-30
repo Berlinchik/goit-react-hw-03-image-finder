@@ -19,8 +19,11 @@ export class App extends Component {
     modalData: null,
   };
 
+  imgItemRef = React.createRef(null);
+
   async componentDidUpdate(prevProps, prevState) {
-    const { query, page } = this.state;
+    const { query, page, items } = this.state;
+    console.log(this.imgItemRef);
 
     try {
       if (prevState.query !== query) {
@@ -39,6 +42,14 @@ export class App extends Component {
           items: [...prevState.items, ...items],
           isLoading: false,
         });
+      }
+
+      if (prevState.items !== items && items !== 0) {
+        this.imgItemRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+        console.log('ref :>> ', this.newsItemRef);
       }
     } catch (error) {
       this.setState({ error: error.message, isLoading: false });
@@ -71,7 +82,11 @@ export class App extends Component {
       <Container>
         <Searchbar onSubmit={this.onHandleSubmit} />
         {error === null ? (
-          <ImageGallery items={items} openModal={this.openModal} />
+          <ImageGallery
+            items={items}
+            openModal={this.openModal}
+            imgItemRef={this.imgItemRef}
+          />
         ) : (
           <p
             style={{
