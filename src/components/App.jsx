@@ -17,30 +17,36 @@ export class App extends Component {
     error: null,
     isLoading: false,
     modalData: null,
+    totalPages: null,
+    itemsAmount: 12,
   };
 
   imgItemRef = React.createRef(null);
 
   async componentDidUpdate(prevProps, prevState) {
     const { query, page, items } = this.state;
-    console.log(this.imgItemRef);
 
     try {
       if (prevState.query !== query) {
         this.setState({ page: 1, isLoading: true, error: null });
-        const items = await fetchData(query, page);
-        if (items.length === 0) {
+        const fetchedItems = await fetchData(query, page);
+        if (fetchedItems.hits.length === 0) {
           throw new Error('Nothing found! Check that the input is correct');
         }
-        this.setState({ items, isLoading: false });
+        this.setState({
+          totalPages: Math.ceil(fetchedItems.totalHits / 12),
+          items: fetchedItems.hits,
+          isLoading: false,
+        });
       }
 
       if (prevState.page !== page && page !== 1) {
         this.setState({ isLoading: true });
         const items = await fetchData(query, page);
         this.setState({
-          items: [...prevState.items, ...items],
+          items: [...prevState.items, ...items.hits],
           isLoading: false,
+          itemsAmount: items.hits.length,
         });
       }
 
@@ -49,16 +55,11 @@ export class App extends Component {
           behavior: 'smooth',
           block: 'start',
         });
-        console.log('ref :>> ', this.newsItemRef);
       }
     } catch (error) {
       this.setState({ error: error.message, isLoading: false });
     }
   }
-
-  onLoadingToogle = () => {
-    this.setState(prev => ({ isLoading: !prev.isLoading }));
-  };
 
   onChangePage = () => {
     this.setState(prev => ({ page: prev.page + 1 }));
@@ -77,7 +78,16 @@ export class App extends Component {
   };
 
   render() {
-    const { items, isLoading, modalData, error } = this.state;
+    const {
+      items,
+      isLoading,
+      modalData,
+      error,
+      page,
+      totalPages,
+      itemsAmount,
+    } = this.state;
+
     return (
       <Container>
         <Searchbar onSubmit={this.onHandleSubmit} />
@@ -86,6 +96,7 @@ export class App extends Component {
             items={items}
             openModal={this.openModal}
             imgItemRef={this.imgItemRef}
+            itemsAmount={itemsAmount}
           />
         ) : (
           <p
@@ -98,9 +109,10 @@ export class App extends Component {
             {error}
           </p>
         )}
-        {items.length > 0 && !isLoading && error === null && (
-          <Button onChangePage={this.onChangePage} />
-        )}
+        {items.length > 0 &&
+          !isLoading &&
+          error === null &&
+          page !== totalPages && <Button onChangePage={this.onChangePage} />}
         {isLoading && (
           <div style={{ margin: '0 auto' }}>
             <ThreeDots

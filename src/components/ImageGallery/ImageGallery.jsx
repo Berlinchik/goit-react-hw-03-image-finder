@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import s from './ImageGallery.module.scss';
 
-const ImageGallery = ({ items, openModal, imgItemRef, itemsAmount = 12 }) => {
+const ImageGallery = ({ items, openModal, imgItemRef, itemsAmount }) => {
   return (
     <div className={s.box}>
       <ul className={s.ImageGallery}>
