@@ -21,19 +21,27 @@ export class App extends Component {
 
   async componentDidUpdate(prevProps, prevState) {
     const { query, page } = this.state;
-    if (prevState.query !== query) {
-      this.setState({ page: 1, isLoading: true });
-      const items = await fetchData(query, page);
-      this.setState({ items, isLoading: false });
-    }
 
-    if (prevState.page !== page && page !== 1) {
-      this.setState({ isLoading: true });
-      const items = await fetchData(query, page);
-      this.setState({
-        items: [...prevState.items, ...items],
-        isLoading: false,
-      });
+    try {
+      if (prevState.query !== query) {
+        this.setState({ page: 1, isLoading: true, error: null });
+        const items = await fetchData(query, page);
+        if (items.length === 0) {
+          throw new Error('Nothing found! Check that the input is correct');
+        }
+        this.setState({ items, isLoading: false });
+      }
+
+      if (prevState.page !== page && page !== 1) {
+        this.setState({ isLoading: true });
+        const items = await fetchData(query, page);
+        this.setState({
+          items: [...prevState.items, ...items],
+          isLoading: false,
+        });
+      }
+    } catch (error) {
+      this.setState({ error: error.message, isLoading: false });
     }
   }
 
@@ -58,12 +66,24 @@ export class App extends Component {
   };
 
   render() {
-    const { items, isLoading, modalData } = this.state;
+    const { items, isLoading, modalData, error } = this.state;
     return (
       <Container>
         <Searchbar onSubmit={this.onHandleSubmit} />
-        <ImageGallery items={items} openModal={this.openModal} />
-        {items.length > 0 && !isLoading && (
+        {error === null ? (
+          <ImageGallery items={items} openModal={this.openModal} />
+        ) : (
+          <p
+            style={{
+              fontSize: '24px',
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
+            {error}
+          </p>
+        )}
+        {items.length > 0 && !isLoading && error === null && (
           <Button onChangePage={this.onChangePage} />
         )}
         {isLoading && (
